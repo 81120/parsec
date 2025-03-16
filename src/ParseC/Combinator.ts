@@ -3,7 +3,9 @@ import { omitLeft, omitRight } from "./Functor";
 import { Pair } from "./Pair";
 import { Parser } from "./Types";
 
-export const satisfy = (f: (str: string) => boolean): Parser<string> =>
+export const satisfy = (
+  f: (str: string) => boolean
+): Parser<string> =>
   Parser.of((input: string) => {
     if (f(input[0])) {
       return Pair.of(input[0], input.slice(1));
@@ -35,7 +37,10 @@ export const oneOrMore = <U>(p: Parser<U>): Parser<U[]> =>
     return r;
   });
 
-export const sepBy = <U, V>(p: Parser<U>, sep: Parser<V>): Parser<U[]> =>
+export const sepBy = <U, V>(
+  p: Parser<U>,
+  sep: Parser<V>
+): Parser<U[]> =>
   Parser.of((input: string) => {
     const ret: U[] = [];
     let s = input;
@@ -55,7 +60,10 @@ export const sepBy = <U, V>(p: Parser<U>, sep: Parser<V>): Parser<U[]> =>
     return Pair.of(ret, s);
   });
 
-export const sepBy1 = <U, V>(p: Parser<U>, sep: Parser<V>): Parser<U[]> =>
+export const sepBy1 = <U, V>(
+  p: Parser<U>,
+  sep: Parser<V>
+): Parser<U[]> =>
   Parser.of((input: string) => {
     const r = sepBy(p, sep).parse(input);
     if (r?.first.length === 0) {
