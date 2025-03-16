@@ -1,5 +1,5 @@
-import { space } from "./Baisc";
-import { omitLeft, omitRight } from "./Functor";
+import { pure, space } from "./Baisc";
+import { flatMap, omitLeft, omitRight, orElse } from "./Functor";
 import { Pair } from "./Pair";
 import { Parser } from "./Types";
 
@@ -37,40 +37,24 @@ export const oneOrMore = <U>(p: Parser<U>): Parser<U[]> =>
     return r;
   });
 
-export const sepBy = <U, V>(
-  p: Parser<U>,
-  sep: Parser<V>
-): Parser<U[]> =>
-  Parser.of((input: string) => {
-    const ret: U[] = [];
-    let s = input;
-    while (true) {
-      const res = p.parse(s);
-      if (res === undefined) {
-        break;
-      }
-      ret.push(res.first);
-      s = res.second;
-      const sepRes = sep.parse(s);
-      if (sepRes === undefined) {
-        break;
-      }
-      s = sepRes.second;
-    }
-    return Pair.of(ret, s);
-  });
-
 export const sepBy1 = <U, V>(
   p: Parser<U>,
   sep: Parser<V>
 ): Parser<U[]> =>
   Parser.of((input: string) => {
-    const r = sepBy(p, sep).parse(input);
-    if (r?.first.length === 0) {
-      return undefined;
-    }
-    return r;
+    const ret: U[] = [];
+    const r = flatMap(p, (x) => {
+      ret.push(x);
+      return zeroOrMore(omitLeft(sep, p));
+    }).parse(input);
+
+    return Pair.of(ret.concat(r!.first), r!.second);
   });
+
+export const sepBy = <U, V>(
+  p: Parser<U>,
+  sep: Parser<V>
+): Parser<U[]> => orElse(sepBy1(p, sep), pure([]));
 
 export const trim = <U>(p: Parser<U>): Parser<U> =>
   omitRight(omitLeft(space, p), space);
